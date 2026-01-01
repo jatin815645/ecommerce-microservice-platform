@@ -1,224 +1,198 @@
-# 🛒 E-Commerce Microservices Platform (ECMS)
+# 🛒 E-Commerce Microservices Platform
 
-A backend **E-Commerce Microservices Platform** built using **Spring Boot**, **Spring Cloud**, and **MySQL**, following a clean microservices architecture.
-This project is designed for learning, scalability, and real-world backend development.
-
----
-
-## 📌 Project Overview
-
-This platform is divided into independent microservices that communicate via an **API Gateway**.
-Each service has its own responsibility, database configuration, and lifecycle.
-
-### Current Microservices
-
-* **Auth Service** – Authentication & Authorization (JWT based)
-* **Product Service** – Product management
-* **API Gateway** – Central entry point for all requests
-
-> 🚧 More services (Order, User, Payment, etc.) can be added later.
+A backend **E-Commerce Microservices Platform** built using **Spring Boot**, **Spring Cloud Gateway**, **JWT-based authentication**, and **MySQL**, following **industry-standard microservice architecture**.
 
 ---
 
-## 🧱 Tech Stack
+## 📌 Architecture Overview
+
+This project consists of **3 independent microservices**:
+
+```
+Client (Postman / Android App)
+        |
+        v
+   API Gateway (8080)
+        |
+        |-- Auth Service (8081)
+        |-- Product Service (8082)
+```
+
+Each service runs independently and communicates via **HTTP REST APIs**.
+
+---
+
+## 🧩 Microservices
+
+### 🔐 Auth Service
+
+* User Registration
+* User Login
+* JWT Token Generation
+* Role-based access support (`USER`, `ADMIN`)
+
+**Port:** `8081`
+
+---
+
+### 📦 Product Service
+
+* Create Product (ADMIN)
+* Update Product (ADMIN)
+* Delete Product (ADMIN)
+* View Products (USER / ADMIN)
+* Pagination support
+
+**Port:** `8082`
+
+---
+
+### 🌐 API Gateway
+
+* Central entry point for all requests
+* Routes requests to appropriate microservices
+* JWT validation at gateway level
+* Secures all routes except `/auth/**`
+
+**Port:** `8080`
+
+---
+
+## 🔐 Security
+
+* **JWT Authentication**
+* Token contains:
+
+  * `username`
+  * `role`
+* Role-Based Access Control (RBAC) enforced in Product Service
+* Stateless authentication (no sessions)
+
+---
+
+## 🛠 Tech Stack
 
 * **Java 17**
-* **Spring Boot**
-* **Spring Cloud Gateway**
-* **Spring Security + JWT**
-* **Spring Data JPA**
+* **Spring Boot 3.x**
+* **Spring Security**
+* **Spring Cloud Gateway (WebFlux)**
+* **JWT (io.jsonwebtoken)**
 * **MySQL**
 * **Maven**
 * **IntelliJ IDEA**
-* **Git & GitHub**
 
 ---
 
-## 📂 Project Structure
+## 🗂 Project Structure
 
 ```
-E-Commerce Microservices Platform (ECMS)
+E-Commerce-Microservices-Platform/
 │
-├── api-gateway
-│   ├── src/main/java
-│   ├── src/main/resources
-│   │   └── application.properties
-│   └── pom.xml
+├── api-gateway/
 │
-├── auth-service
-│   ├── src/main/java
-│   ├── src/main/resources
-│   │   └── application.properties
-│   └── pom.xml
+├── auth-service/
 │
-├── product-service
-│   ├── src/main/java
-│   ├── src/main/resources
-│   │   └── application.properties
-│   └── pom.xml
+├── product-service/
 │
 ├── .gitignore
 ├── README.md
 ```
 
----
-
-## 🔐 Auth Service
-
-### Responsibilities
-
-* User login
-* JWT token generation
-* Authentication validation
-
-### Sample Login API
-
-```
-POST /auth/login
-```
-
-**Request Body**
-
-```json
-{
-  "username": "admin",
-  "password": "admin123"
-}
-```
-
-**Response**
-
-```json
-{
-  "token": "jwt-token-value"
-}
-```
+Each microservice is a **separate Spring Boot project**.
 
 ---
 
-## 📦 Product Service
+## ⚙️ Configuration
 
-### Responsibilities
+Each service uses `application.properties`.
 
-* Product CRUD operations
-* Product catalog management
-
-### Example Endpoint
-
-```
-GET /products
-```
-
----
-
-## 🌐 API Gateway
-
-### Responsibilities
-
-* Single entry point for clients
-* Route requests to microservices
-* Centralized configuration
-
-### Example Routes
+Example (Auth Service):
 
 ```properties
-spring.cloud.gateway.routes[0].id=auth-service
-spring.cloud.gateway.routes[0].uri=http://localhost:8081
-spring.cloud.gateway.routes[0].predicates[0]=Path=/auth/**
-
-spring.cloud.gateway.routes[1].id=product-service
-spring.cloud.gateway.routes[1].uri=http://localhost:8082
-spring.cloud.gateway.routes[1].predicates[0]=Path=/products/**
-```
-
----
-
-## 🗄️ Database Configuration (MySQL)
-
-Each microservice uses its **own database**.
-
-Example (`application.properties`):
-
-```properties
+server.port=8081
 spring.datasource.url=jdbc:mysql://localhost:3306/auth_db
 spring.datasource.username=root
 spring.datasource.password=your_password
 
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+jwt.secret=my-strong-secret-key
+jwt.expiration=86400000
 ```
 
 ---
 
-## ▶️ How to Run the Project
+## 🚀 How to Run Locally
 
 ### 1️⃣ Start MySQL
 
-Make sure MySQL is running and databases are created.
+Create required databases:
 
-### 2️⃣ Start Services (order matters)
-
-```bash
-1. auth-service
-2. product-service
-3. api-gateway
+```sql
+CREATE DATABASE auth_db;
+CREATE DATABASE product_db;
 ```
 
-Run each service using:
+---
+
+### 2️⃣ Run Services (in order)
 
 ```bash
+# Auth Service
+cd auth-service
+mvn spring-boot:run
+
+# Product Service
+cd product-service
+mvn spring-boot:run
+
+# API Gateway
+cd api-gateway
 mvn spring-boot:run
 ```
 
-or directly from IntelliJ.
-
 ---
 
-## 🧪 Testing APIs
+## 🔍 API Testing (Postman)
 
-* Use **Postman**
-* Access APIs via **API Gateway**
-
-Example:
+### 🔑 Register User
 
 ```
-http://localhost:8080/auth/login
-http://localhost:8080/products
+POST http://localhost:8080/auth/register
+```
+
+### 🔑 Login
+
+```
+POST http://localhost:8080/auth/login
+```
+
+➡️ Copy the JWT token from response.
+
+---
+
+### 📦 Product APIs (via Gateway)
+
+```
+GET    /products
+POST   /products        (ADMIN only)
+PUT    /products/{id}   (ADMIN only)
+DELETE /products/{id}   (ADMIN only)
+```
+
+Add header:
+
+```
+Authorization: Bearer <JWT_TOKEN>
 ```
 
 ---
 
-## 🚀 How to Push Project to GitHub
+## 🧠 Future Enhancements
 
-```bash
-git init
-git add .
-git commit -m "Initial commit - E-Commerce Microservices Platform"
-git branch -M main
-git remote add origin https://github.com/jatin815645/ecommerce-microservice-platform.git
-git push -u origin main
-```
-
----
-
-## 🛑 .gitignore Highlights
-
-* `target/`
-* `.idea/`
-* `*.iml`
-* `*.log`
-* Environment-specific config files
-
----
-
-## 📈 Future Enhancements
-
-* Order Service
-* User Service
-* Role-based authorization
+* Android App (Jetpack Compose)
 * Docker & Docker Compose
-* Service discovery (Eureka)
-* Centralized config server
+* Service Discovery (Eureka)
+* Centralized Config Server
+* Refresh Tokens
 * CI/CD pipeline
 
 ---
@@ -226,5 +200,4 @@ git push -u origin main
 ## 👨‍💻 Author
 
 **Jitendra Patil**
-Junior Android & Backend Developer
-Learning Spring Boot Microservices 🚀
+Backend & Android Developer
